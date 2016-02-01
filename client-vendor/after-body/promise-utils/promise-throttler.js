@@ -39,24 +39,17 @@
    * @see promiseThrottler
    */
   function nonameThrottler(fn, options) {
-    var promise;
+    var promise = Promise.resolve();
 
     return function() {
-      if (options.cancelLeading && promise && promise.isPending() && promise.isCancellable()) {
+      var args = arguments;
+      var self = this;
+      if (options.cancelLeading) {
         promise.cancel();
-        promise = null;
       }
-      if (options.queue && promise && promise.isPending()) {
-        var args = arguments;
-        var self = this;
-        promise = promise.finally(function() {
-          return fn.apply(self, args);
-        });
-      }
-      if (!promise || !promise.isPending()) {
-        promise = fn.apply(this, arguments);
-      }
-      return promise;
+      return promise = promise.finally(function() {
+        return fn.apply(self, args);
+      });
     };
   }
 
