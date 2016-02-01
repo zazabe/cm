@@ -40,13 +40,19 @@
    */
   function nonameThrottler(fn, options) {
     var promise = Promise.resolve();
+    var firstRun = true;
 
     return function() {
-      var args = arguments;
-      var self = this;
-      if (options.cancelLeading) {
+      if (!options.queue && !firstRun) {
+        return promise;
+      } else if (options.cancelLeading) {
         promise.cancel();
       }
+
+      var args = arguments;
+      var self = this;
+      firstRun = false;
+
       return promise = promise.finally(function() {
         return fn.apply(self, args);
       });
