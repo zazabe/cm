@@ -7,22 +7,18 @@ class CM_Log_Handler_Fluentd extends CM_Log_Handler_Abstract {
     /** @var \Fluent\Logger\FluentLogger */
     protected $_fluentdLogger;
 
-    /** @var CM_Log_ContextFormatter_Interface */
-    protected $_contextFormatter;
-
     /** @var string */
     protected $_tag;
 
     /**
-     * @param FluentLogger                      $fluentdLogger
-     * @param CM_Log_ContextFormatter_Interface $contextFormatter
-     * @param string                            $tag
-     * @param int|null                          $minLevel
+     * @param FluentLogger               $fluentdLogger
+     * @param CM_Log_Formatter_Interface $contextFormatter
+     * @param string                     $tag
+     * @param int|null                   $minLevel
      */
-    public function __construct(FluentLogger $fluentdLogger, CM_Log_ContextFormatter_Interface $contextFormatter, $tag, $minLevel = null) {
-        parent::__construct($minLevel);
+    public function __construct(CM_Log_Formatter_Interface $formatter, FluentLogger $fluentdLogger, $tag, $minLevel = null) {
+        parent::__construct($minLevel, $formatter);
         $this->_fluentdLogger = $fluentdLogger;
-        $this->_contextFormatter = $contextFormatter;
         $this->_tag = (string) $tag;
     }
 
@@ -37,17 +33,16 @@ class CM_Log_Handler_Fluentd extends CM_Log_Handler_Abstract {
      * @param CM_Log_Record $record
      */
     protected function _writeRecord(CM_Log_Record $record) {
-        $formattedRecord = $this->_formatRecord($record);
-        $formattedRecord = $this->_sanitizeRecord($formattedRecord);
-        $this->_getFluentd()->post($this->_tag, $formattedRecord);
+        $this->_getFluentd()->post($this->_tag, $this->_formatRecord($record));
     }
 
     /**
      * @param CM_Log_Record $record
-     * @return array
+     * @return mixed
      */
     protected function _formatRecord(CM_Log_Record $record) {
-        return $this->_contextFormatter->formatRecordContext($record);
+        $formattedRecord = $this->getFormatter()->format($record);
+        return $this->_sanitizeRecord($formattedRecord);
     }
 
     /**

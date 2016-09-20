@@ -576,6 +576,29 @@ abstract class CM_Http_Request_Abstract {
     }
 
     /**
+     * @return string
+     * @see http://publib.boulder.ibm.com/tividd/td/ITWSA/ITWSA_info45/en_US/HTML/guide/c-logs.html#combined
+     */
+    public function toString() {
+        $server = $this->getServer();
+        $format = 'host rfc931 username date:time "request" statuscode bytes referrer user_agent cookie';
+        $data = [
+            'host'       => $this->getHost(),
+            'date:time'  => isset($server['REQUEST_TIME']) ? $server['REQUEST_TIME'] : '',
+            'statuscode' => null,
+            'bytes'      =>  isset($server['CONTENT_LENGTH']) ? $server['CONTENT_LENGTH'] : '',
+            'request'    => join(' ', [
+                isset($server['REQUEST_METHOD']) ? $server['REQUEST_METHOD'] : '',
+                $this->getPath(),
+                isset($server['SERVER_PROTOCOL']) ? $server['SERVER_PROTOCOL'] : ''
+            ]),
+            'referer'    => $this->hasHeader('referer') ? $this->getHeader('referer') : null,
+            'user_agent' => $this->getUserAgent(),
+        ];
+
+    }
+
+    /**
      * @return CM_Model_Language|null
      */
     private function _getLanguageViewer() {

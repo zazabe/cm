@@ -2,80 +2,40 @@
 
 abstract class CM_Log_Formatter_Abstract implements CM_Log_Formatter_Interface {
 
-    /** @var  string */
-    protected $_formatMessage;
+    /** @var  CM_Log_ContextFormatter_Interface */
+    protected $_contextFormatter;
 
     /** @var  string */
     protected $_formatDate;
 
     /**
-     * @param string|null $formatMessage replace {datetime}, {levelName}, {fqdn}, {phpversion} and {message} by log record values
-     * @param string|null $formatDate    format accepted by date()
+     * @param CM_Log_ContextFormatter_Interface $contextFormatter
+     * @param string $formatDate
      */
-    public function __construct($formatMessage = null, $formatDate = null) {
-        $defaults = $this->_getDefaults();
-
-        $formatMessage = null === $formatMessage ? $defaults['formatMessage'] : (string) $formatMessage;
-        $formatDate = null === $formatDate ? $defaults['formatDate'] : (string) $formatDate;
-
-        $this->_formatMessage = $formatMessage;
+    public function __construct(CM_Log_ContextFormatter_Interface $contextFormatter,  $formatDate = null) {
+        $formatDate = null !== $formatDate ? $formatDate : DateTime::ISO8601;
+        $this->_contextFormatter = $contextFormatter;
         $this->_formatDate = $formatDate;
     }
 
     /**
-     * @param CM_Log_Record $record
-     * @return string
+     * @return CM_Log_ContextFormatter_Interface
      */
-    public function render(CM_Log_Record $record) {
-        $renderedText = [];
-        $renderedText[] = $this->renderMessage($record);
-
-        $contextText = $this->renderContext($record);
-        if (null !== $contextText) {
-            $renderedText[] = $contextText;
-        }
-        return implode(PHP_EOL, $renderedText);
-    }
-
-    abstract public function renderMessage(CM_Log_Record $record);
-
-    abstract public function renderContext(CM_Log_Record $record);
-
-    /**
-     * @return array
-     */
-    protected function _getDefaults() {
-        return [
-            'formatMessage' => '{message}',
-            'formatDate'    => 'c',
-        ];
+    public function getContextFormatter() {
+        return $this->_contextFormatter;
     }
 
     /**
      * @param CM_Log_Record $record
      * @return array
-     * @throws CM_Exception_Invalid
      */
-    protected function _getRecordInfo(CM_Log_Record $record) {
-        $computerInfo = $record->getContext()->getComputerInfo();
+    public function format(CM_Log_Record $record) {
+        $context = $record->getContext();
         return [
-            'datetime'   => $record->getCreatedAt()->format($this->_formatDate),
-            'levelname'  => CM_Log_Logger::getLevelName($record->getLevel()),
-            'message'    => $record->getMessage(),
-            'fqdn'       => null === $computerInfo ? 'none' : $computerInfo->getFullyQualifiedDomainName(),
-            'phpVersion' => null === $computerInfo ? 'none' : $computerInfo->getPhpVersion(),
+            'message'   => $record->getMessage(),
+            'level'     => strtolower(CM_Log_Logger::getLevelName($record->getLevel())),
+            'timestamp' => $record->getCreatedAt()->format($this->_formatDate),
+            'context'   => $this->getContextFormatter()->format($context)
         ];
-    }
-
-    /**
-     * @param string $text
-     * @param array  $data
-     * @return string
-     */
-    protected function _format($text, array $data) {
-        $text = (string) $text;
-        return preg_replace_callback('/\{([a-z]+)\}/i', function ($matches) use ($data) {
-            return isset($data[$matches[1]]) ? $data[$matches[1]] : '';
-        }, $text);
     }
 }

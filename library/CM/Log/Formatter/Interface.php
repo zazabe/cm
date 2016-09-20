@@ -4,7 +4,7 @@ interface CM_Log_Formatter_Interface {
 
     /**
      * @param CM_Log_Record $record
-     * @return string
+     * @return mixed
      */
-    public function render(CM_Log_Record $record);
+    public function format(CM_Log_Record $record);
 }

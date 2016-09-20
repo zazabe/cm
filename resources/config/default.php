@@ -268,12 +268,15 @@ return function (CM_Config_Node $config) {
     ];
 
     $config->services['logger-handler-mongodb'] = [
-        'class'     => 'CM_Log_Handler_MongoDb',
-        'arguments' => [
-            'collection'    => 'cm_log',
-            'recordTtl'     => null,
-            'insertOptions' => null,
-            'minLevel'      => CM_Log_Logger::DEBUG,
+        'class'  => 'CM_Log_Handler_Factory',
+        'method' => [
+            'name'      => 'createMongoDbHandler',
+            'arguments' => [
+                'collection'    => 'cm_log',
+                'recordTtl'     => null,
+                'insertOptions' => null,
+                'minLevel'      => CM_Log_Logger::DEBUG,
+            ],
         ],
     ];
 

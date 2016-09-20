@@ -5,12 +5,32 @@ abstract class CM_Log_Handler_Abstract implements CM_Log_Handler_HandlerInterfac
     /** @var int */
     protected $_minLevel;
 
+    /** @var CM_Log_Formatter_Interface */
+    protected $_formatter;
+
     /**
-     * @param int|null $minLevel
+     * @param int|null                        $minLevel
+     * @param CM_Log_Formatter_Interface $formatter
      */
-    public function __construct($minLevel = null) {
+    public function __construct($minLevel = null, CM_Log_Formatter_Interface $formatter) {
         $minLevel = null === $minLevel ? CM_Log_Logger::DEBUG : (int) $minLevel;
         $this->setMinLevel($minLevel);
+        $this->_formatter = $formatter;
+    }
+
+    /**
+     * @return CM_Log_Formatter_Interface
+     */
+    public function getFormatter() {
+        return $this->_formatter;
+    }
+
+    /**
+     * @param CM_Log_Record $record
+     * @return mixed
+     */
+    protected function _formatRecord(CM_Log_Record $record) {
+        return $this->getFormatter()->format($record);
     }
 
     /**
